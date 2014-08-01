@@ -88,7 +88,7 @@ Traverse.prototype.clone = function () {
             }
         }
         
-        if (typeof src === 'object' && src !== null) {
+        if (!isTerminal(src)) {
             var dst = copy(src);
             
             parents.push(src);
@@ -194,8 +194,7 @@ function walk (root, cb, immutable) {
         
         if (!keepGoing) return state;
         
-        if (typeof state.node == 'object'
-        && state.node !== null && !state.circular) {
+        if (!isTerminal(state.node) && !state.circular) {
             parents.push(state);
             
             updateState();
@@ -232,6 +231,9 @@ function copy (src) {
         
         if (isArray(src)) {
             dst = [];
+        }
+        else if (isBuffer(src)) {
+            dst = new Buffer(src);
         }
         else if (isDate(src)) {
             dst = new Date(src.getTime ? src.getTime() : src);
@@ -283,12 +285,17 @@ var objectKeys = Object.keys || function keys (obj) {
 };
 
 function toS (obj) { return Object.prototype.toString.call(obj) }
+function isBuffer (obj) { return obj instanceof Buffer; }
 function isDate (obj) { return toS(obj) === '[object Date]' }
 function isRegExp (obj) { return toS(obj) === '[object RegExp]' }
 function isError (obj) { return toS(obj) === '[object Error]' }
 function isBoolean (obj) { return toS(obj) === '[object Boolean]' }
 function isNumber (obj) { return toS(obj) === '[object Number]' }
 function isString (obj) { return toS(obj) === '[object String]' }
+
+function isTerminal(obj) {
+    return (typeof obj !== 'object' || obj === null || isBuffer(obj));
+}
 
 var isArray = Array.isArray || function isArray (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
